@@ -8,7 +8,7 @@ import (
 )
 
 type Filter struct {
-	opera.Operation
+	operation.Operation
 }
 
 func NewFilter(waiter *sync.WaitGroup) *Filter {
@@ -24,10 +24,10 @@ func (f *Filter) Execute() {
 	if (f.Source != nil) {
 		for rec := range *f.Source {
 			switch recType := rec.(type) {
-				case *gprec.Global:
+				case *records.Global:
 					fmt.Printf("filter received global\n") 
-				case *gprec.Trace:
-					t := rec.(*gprec.Trace)
+				case *records.Trace:
+					t := rec.(*records.Trace)
 					fmt.Printf("filter received trace %d\n",t.Header[0])
 					
 				default:
