@@ -21,7 +21,7 @@ type RecordUnmarshaller interface {
 }
 
 type Dscout struct {
-	fname string
+	fname stringMarshalTrace
 	waiter *sync.WaitGroup
 	predecessor chan records.Rec
 	successor chan records.Rec
