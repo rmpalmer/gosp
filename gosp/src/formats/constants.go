@@ -1,4 +1,8 @@
-package dscout
+package formats
+
+import (
+
+)
 
 const (
 	// hex number (decimal 1069)

@@ -1,108 +1,81 @@
 package dscout
 
 import (
-	"fmt"
-	"operation"
-	"records"
-	"sync"
-	"io"
 	"os"
-	"strings"
 	"compress/gzip"
-	"path/filepath"
+	"io"
+	"sync"
+	"strings"
+	"records"
+	"formats"
+	"operation"
+	"fmt"
 )
 
-type RecordMarshaller interface {
-	MarshalRecord(writer io.Writer, rec *records.Rec) error 
-}
-
-type RecordUnmarshaller interface {
-	UnmarshalRecord(reader io.Reader) (*records.Rec, error)
-}
-
 type Dscout struct {
-	fname stringMarshalTrace
-	waiter *sync.WaitGroup
-	predecessor chan records.Rec
-	successor chan records.Rec
+	operation.Operation
+	closer		func()
+	marshaler	formats.RecordMarshaler
 }
 
-func New(fname string, waiter *sync.WaitGroup, pred operation.Oper) *Dscout {
-	dscout := &Dscout{fname, waiter, nil, nil}
-	dscout.waiter.Add(1)
-	dscout.predecessor = make(chan records.Rec)
-	pred.Follow(dscout.predecessor)
-	return dscout
-}
-
-func (f *Dscout) Follow(c chan records.Rec) {
-	f.successor = c
-}
-
-func (d *Dscout) Exec() {
-	done := false
-	fmt.Print(done)
-	fmt.Printf("dscout Exec Start\n")
-	
-	file, closer, err := createOutFile(d.fname)
-	
-	var marshaler RecordMarshaller
-	
-    switch suffixOf(d.fname) {
-    case ".gob":
-        marshaler = GobMarshaler{}
-//    case ".txt":
-//        marshaler = TxtMarshaler{}
-    }
-	
-	if (closer != nil) {
-		defer closer()
-	}
-	if (err != nil) {
-		done = true
-	}	
-	
-	for !done {
-		r := <- d.predecessor
-		switch  r.(type) {
-		case *records.Eod:
-			fmt.Printf("dscout read eod\n")
-			done = true
-		case *records.Trace:
-			fmt.Printf("dscout read record\n")
-		}
-		marshaler.MarshalRecord(file, *r)
-		if (d.successor != nil) {
-			fmt.Printf("dscout sending to successor\n")
-			d.successor <- r
-		}
-	}
-	d.waiter.Done()
-}
-
-func createOutFile(fname string) (io.WriteCloser, func(), error) {
-	file, err := os.Create(fname)
+func NewDscout (waiter *sync.WaitGroup, filename string) *Dscout {
+	d := new(Dscout)
+	d.Operation.Waiter = waiter
+	d.Operation.Waiter.Add(1)
+	file, err := os.Create(filename)
 	if err != nil {
-        return nil, nil, err
-    }
-	closer := func() {
-		fmt.Printf("closing the file\n")
+		return nil
+	}
+	d.closer = func() {
 		file.Close()
 	}
-    var writer io.WriteCloser = file
-    var compressor *gzip.Writer
-    if strings.HasSuffix(fname, ".gz") {
-        compressor = gzip.NewWriter(file)
-        closer = func() { compressor.Close(); file.Close() }
-        writer = compressor
-    }
-    return writer, closer, nil
+	var writer io.WriteCloser = file
+	var compressor *gzip.Writer
+	if strings.HasSuffix(filename, ".gz") {
+		compressor = gzip.NewWriter(file)
+		d.closer = func() { compressor.Close(); file.Close() }
+		writer = compressor
+	}
+	uncompressed_name := strings.TrimRight(filename, ".gz")
+	switch {
+		case strings.HasSuffix(uncompressed_name, ".gob"):
+			d.marshaler = new(formats.GobMarshaler)
+		case strings.HasSuffix(uncompressed_name, ".xml"):
+			d.marshaler = new(formats.XmlMarshaler)
+	}
+	if (d.marshaler != nil) {
+		d.marshaler.InitFile(writer)
+	}
+	return d
 }
 
-func suffixOf(filename string) string {
-    suffix := filepath.Ext(filename)
-    if suffix == ".gz" {
-        suffix = filepath.Ext(filename[:len(filename)-3])
-    }
-    return suffix
+func (d *Dscout) Execute() {
+	fmt.Printf("dscout execute\n")
+	if (d.Source != nil) {
+		for rec := range *d.Source {
+			switch recType := rec.(type) {
+				case *records.Global:
+					fmt.Printf("dscout received global\n") 
+				case *records.Trace:
+					t := rec.(*records.Trace)
+					fmt.Printf("dscout received trace %d\n",t.Header[0])
+					d.HandleTrace(t)
+				default:
+					fmt.Printf("dscout received unrecognized type %v\n",recType) 
+			}
+			if (d.Sink != nil) {
+				d.Sink <- rec
+			}
+		}
+		if (d.Sink != nil) {
+			close(d.Sink)
+		}
+		d.closer()
+	} 
+	d.Operation.Waiter.Done()
 }
+
+func (d *Dscout) HandleTrace(trace *records.Trace) {
+	d.marshaler.MarshalTrace(trace)
+}
+
