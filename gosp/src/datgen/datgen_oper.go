@@ -1,53 +1,43 @@
 package datgen
 
 import (
-	"records"
 	"fmt"
+	"records"
+	"operation"
 	"sync"
 )
 
 type Datgen struct {
-	count int
-	hSize int
-	dSize int
-	waiter *sync.WaitGroup
-	successor chan records.Rec
+	operation.Operation
+	nrecs int
 }
 
-func New(count, hSize, dSize int, waiter *sync.WaitGroup) *Datgen {
-	datgen := Datgen{count,hSize,dSize,waiter,nil}
-	datgen.waiter.Add(1)
-	return &datgen
+func NewDatgen(waiter *sync.WaitGroup, n int) *Datgen {
+	d := &Datgen{}
+	d.nrecs = n
+	d.Operation.Waiter = waiter
+	d.Operation.Waiter.Add(1)
+	return d
 }
 
-func (d *Datgen) Follow(c chan records.Rec) {
-	if (c != nil) {
-		fmt.Print("adding a follower\n")
-		d.successor = c
-	} else {
-		fmt.Print("follower channel was nil!\n")
+func (d *Datgen) Execute() {
+	fmt.Printf("d will generate %d recs\n",d.nrecs)
+	var t *records.Trace
+	var g *records.Global
+	g = records.NewGlobal(0, 4, 1000)
+	if (d.Sink != nil) {
+		d.Sink <- g
 	}
-}
-
-func (d *Datgen) Exec() {
-	
-	fmt.Printf("DATGEN exec start\n")
-	t:= records.NewTrace(d.hSize,d.dSize)
-	for i:=0; i<d.count; i++ {
-		fmt.Printf("datgen generating trace %d\n",i)
-		if (d.successor != nil) {
-			fmt.Print("datgen sending to my follower\n")
-			d.successor <- t
-		} else {
-			fmt.Printf("datgen no follower\n")
+	for i := 0; i<d.nrecs; i++ {
+		t = records.NewTrace(64,1024)
+		t.Header[0] = i
+		fmt.Printf("generate %d\n",t.Header[0])
+		if (d.Sink != nil) {
+			d.Sink <- t
 		}
 	}
-	if (d.successor != nil) {
-		fmt.Printf("datgen sending eod\n")
-		var eod *records.Eod
-		d.successor <- eod
-	} else {
-		fmt.Printf("datgen hiding eod\n")
+	if (d.Sink != nil) {
+		close(d.Sink)
 	}
-	d.waiter.Done()
+	d.Operation.Waiter.Done()
 }

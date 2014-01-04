@@ -3,46 +3,43 @@ package filter
 import (
 	"fmt"
 	"operation"
-	"records"
 	"sync"
+	"records"
 )
 
 type Filter struct {
-	f1 float64
-	waiter *sync.WaitGroup
-	predecessor chan records.Rec
-	successor chan records.Rec
+	opera.Operation
 }
 
-func New(f1 float64, waiter *sync.WaitGroup, pred operation.Oper) *Filter {
-	filter := &Filter{f1, waiter, nil, nil}
-	filter.waiter.Add(1)
-	filter.predecessor = make(chan records.Rec)
-	pred.Follow(filter.predecessor)
-	return filter
+func NewFilter(waiter *sync.WaitGroup) *Filter {
+	f := &Filter{}
+	f.Operation.Waiter = waiter
+	f.Operation.Waiter.Add(1)
+	return f
 }
 
-func (f *Filter) Follow(c chan records.Rec) {
-	f.successor = c
-}
 
-func (f *Filter) Exec() {
-	done := false
-	fmt.Print(done)
-	fmt.Printf("FILTER Exec Start\n")
-	for !done {
-		r := <- f.predecessor
-		switch  r.(type) {
-		case *records.Eod:
-			fmt.Printf("filter read eod\n")
-			done = true
-		case *records.Trace:
-			fmt.Printf("filter read record\n")
+func (f *Filter) Execute() {
+	fmt.Printf("filter execute\n")
+	if (f.Source != nil) {
+		for rec := range *f.Source {
+			switch recType := rec.(type) {
+				case *gprec.Global:
+					fmt.Printf("filter received global\n") 
+				case *gprec.Trace:
+					t := rec.(*gprec.Trace)
+					fmt.Printf("filter received trace %d\n",t.Header[0])
+					
+				default:
+					fmt.Printf("filter received unrecognized type %v\n",recType) 
+			}
+			if (f.Sink != nil) {
+				f.Sink <- rec
+			}
 		}
-		if (f.successor != nil) {
-			fmt.Printf("filter sending to successor\n")
-			f.successor <- r
+		if (f.Sink != nil) {
+			close(f.Sink)
 		}
-	}
-	f.waiter.Done()
+	} 
+	f.Operation.Waiter.Done()
 }
