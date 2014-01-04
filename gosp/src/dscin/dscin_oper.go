@@ -59,6 +59,7 @@ func (d *Dscin) Execute() {
 		} else if (d.Sink != nil) {
 			d.Sink <- t
 		}
+		fmt.Printf("dscin read trace %d\n", t.Header[0])
 	}
 	if (d.Sink != nil) {
 		close(d.Sink)
