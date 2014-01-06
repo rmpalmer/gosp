@@ -97,10 +97,12 @@ func (g *GobMarshaler) UnmarshalRecord() (records.Record, error ) {
 	err := g.decoder.Decode(&recid)
 	switch recid {
 		case 4095:
+			fmt.Printf("attempting to decode trace\n")
 			tr = new(records.Trace)
 			err = g.decoder.Decode(tr)
 			return tr, err
 		case 255:
+			fmt.Printf("attempting to decode global\n")
 			gl = new(records.Global)
 			err = g.decoder.Decode(gl)
 			return gl, err

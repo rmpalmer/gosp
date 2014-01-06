@@ -10,6 +10,7 @@ import (
 	"formats"
 	"operation"
 	"fmt"
+	"log"
 )
 
 type Dscin struct {
@@ -55,6 +56,7 @@ func (d *Dscin) Execute() {
 	for {
 		r = d.HandleRecord()
 		if (r == nil) {
+			fmt.Printf("dscin execute break\n")
 			break
 		} else if (d.Sink != nil) {
 			d.Sink <- r
@@ -69,6 +71,8 @@ func (d *Dscin) Execute() {
 func (d *Dscin) HandleRecord() records.Record {
 	r, err := d.marshaler.UnmarshalRecord()
 	if (err != nil) {
+		fmt.Printf("error returned from unmarshalRecord, found in HandleRecord\n")
+		log.Print(err)
 		return nil
 	}
 	return r

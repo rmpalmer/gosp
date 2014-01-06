@@ -1,11 +1,11 @@
 package main 
 
 import (
-	//"datgen"
-	//"filter"
+	"datgen"
+	"filter"
 	"sync"
 	"fmt"
-	//"dscout"
+	"dscout"
 	"dscin"
 )	
 
@@ -16,19 +16,21 @@ func main() {
 	// then Execute() is a method on the operation.   
 	 
 	waiter := &sync.WaitGroup{}
-	/* writing
-	d := datgen.NewDatgen(waiter,5)
-	f := filter.NewFilter(waiter)
-	o := dscout.NewDscout(waiter,"foobar.gob")
-	d.Append(&f.Operation)
-	f.Append(&o.Operation)
-	go d.Execute()
-	go f.Execute()
-	go o.Execute()
-	*/
-	/* reading */
-	d := dscin.NewDscin(waiter,"foobar.gob")
-	go d.Execute()
+	/* writing */
+	if (false) {
+		d := datgen.NewDatgen(waiter,5)
+		f := filter.NewFilter(waiter)
+		o := dscout.NewDscout(waiter,"foobar.xml")
+		d.Append(&f.Operation)
+		f.Append(&o.Operation)
+		go d.Execute()
+		go f.Execute()
+		go o.Execute()
+	} else {
+	/* reading */ 
+		d := dscin.NewDscin(waiter,"foobar.xml")
+		go d.Execute()
+	}
 	waiter.Wait()
 	
 	fmt.Printf("Goodbye gosp version 0.1\n")

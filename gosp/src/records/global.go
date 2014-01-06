@@ -5,9 +5,9 @@ import (
 )
 
 type Global struct {
-	tmin int
-	tmax int
-	dt   int
+	Tmin int
+	Tmax int
+	Dt   int
 }
 
 func (g *Global) Rectyp() int {

@@ -10,6 +10,7 @@ import (
 	"formats"
 	"operation"
 	"fmt"
+	"log"
 )
 
 type Dscout struct {
@@ -81,5 +82,9 @@ func (d *Dscout) Execute() {
 //}
 
 func (d *Dscout) HandleRecord(rec records.Record) {
-	d.marshaler.MarshalRecord(rec)
+	err := d.marshaler.MarshalRecord(rec)
+	if (err != nil) {
+		fmt.Printf("error from MarshalRecord\n")
+		log.Print(err)
+	}
 }
