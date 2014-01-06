@@ -7,4 +7,3 @@ import (
 type Record interface {
 	Rectyp() int
 }
-

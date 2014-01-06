@@ -50,37 +50,6 @@ func (g *GobMarshaler) ValidateFile(reader io.Reader) (error) {
 	return nil
 }
 
-func (g *GobMarshaler) MarshalGlobal(global *records.Global) error {
-	fmt.Printf("starting gob MarshalGlobal\n")
-	err := g.encoder.Encode(global.Rectyp())
-	err  = g.encoder.Encode(global)
-	return err
-}
-
-func (g *GobMarshaler) MarshalTrace(trace *records.Trace) error {
-    fmt.Printf("starting gob MarshalTrace\n")
-    err := g.encoder.Encode(trace.Rectyp())
-    err  = g.encoder.Encode(trace)
-    //fmt.Printf("done calling encoder.Encode %s\n",err)
-    return err
-}
-
-func (g *GobMarshaler) UnmarshalGlobal() (*records.Global, error) {
-	fmt.Printf("starting gob UnmarshalGlobal\n")
-	var global records.Global
-	fmt.Printf("unmarshaller about to decode global\n")
-	err := g.decoder.Decode(&global)
-	return &global, err
-}
-
-func (g *GobMarshaler) UnmarshalTrace() (*records.Trace, error) {
-    fmt.Printf("starting gob UnmarshalTrace\n")
-    var trace records.Trace
-    fmt.Printf("unmarshaller about to decode trace\n")
-    err := g.decoder.Decode(&trace)
-    //fmt.Printf("done calling decoder.Decode %s\n",err)
-    return &trace, err
-}
 
 func (g *GobMarshaler) MarshalRecord(rec records.Record) error {
 	fmt.Printf("starting gob MarshalRecord\n")
@@ -96,12 +65,12 @@ func (g *GobMarshaler) UnmarshalRecord() (records.Record, error ) {
 	var gl *records.Global
 	err := g.decoder.Decode(&recid)
 	switch recid {
-		case 4095:
+		case records.TraceType:
 			fmt.Printf("attempting to decode trace\n")
 			tr = new(records.Trace)
 			err = g.decoder.Decode(tr)
 			return tr, err
-		case 255:
+		case records.GlobalType:
 			fmt.Printf("attempting to decode global\n")
 			gl = new(records.Global)
 			err = g.decoder.Decode(gl)

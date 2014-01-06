@@ -48,22 +48,6 @@ func (x *XmlMarshaler) ValidateFile(reader io.Reader) (error) {
 	return nil
 }
 
-func (x *XmlMarshaler) MarshalTrace(trace *records.Trace) error {
-    fmt.Printf("starting xml MarshalTrace\n")
-    err := x.encoder.Encode(trace)
-    fmt.Printf("done calling encoder.Encode %s\n",err)
-    return err
-}
-
-func (x *XmlMarshaler) UnmarshalTrace() (*records.Trace, error) {
-    fmt.Printf("starting xml UnmarshalTrace\n")
-    var trace records.Trace
-    fmt.Printf("unmarshaller about to decode trace\n")
-    err := x.decoder.Decode(&trace)
-    fmt.Printf("done calling decoder.Decode %s\n",err)
-    return &trace, err
-}
-
 func (x *XmlMarshaler) MarshalRecord(rec records.Record) error {
 	fmt.Printf("starting gob MarshalRecord\n")
 	err := x.encoder.Encode(rec.Rectyp())
@@ -78,11 +62,11 @@ func (x *XmlMarshaler) UnmarshalRecord() (records.Record, error ) {
 	var gl *records.Global
 	err := x.decoder.Decode(&recid)
 	switch recid {
-		case 4095:
+		case records.TraceType:
 			tr = new(records.Trace)
 			err = x.decoder.Decode(tr)
 			return tr, err
-		case 255:
+		case records.GlobalType:
 			gl = new(records.Global)
 			err = x.decoder.Decode(gl)
 			return gl, err

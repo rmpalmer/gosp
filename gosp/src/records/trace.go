@@ -4,6 +4,10 @@ import (
 
 )
 
+const (
+	TraceType = 4095
+)
+
 type Trace struct {
 	Header []int
 	Data []float64
@@ -15,7 +19,7 @@ func NewTrace(hlen, dlen int) *Trace {
 }
 
 func (t *Trace) Rectyp() int {
-	return 4095
+	return TraceType
 }
 
 func (t *Trace) Hlen() int {
