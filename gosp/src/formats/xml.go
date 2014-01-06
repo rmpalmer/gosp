@@ -64,3 +64,28 @@ func (x *XmlMarshaler) UnmarshalTrace() (*records.Trace, error) {
     return &trace, err
 }
 
+func (x *XmlMarshaler) MarshalRecord(rec records.Record) error {
+	fmt.Printf("starting gob MarshalRecord\n")
+	err := x.encoder.Encode(rec.Rectyp())
+	err  = x.encoder.Encode(rec)
+	return err
+}
+
+func (x *XmlMarshaler) UnmarshalRecord() (records.Record, error ) {
+	fmt.Printf("starting gob UnmarshalRecord\n")
+	var recid int
+	var tr *records.Trace
+	var gl *records.Global
+	err := x.decoder.Decode(&recid)
+	switch recid {
+		case 4095:
+			tr = new(records.Trace)
+			err = x.decoder.Decode(tr)
+			return tr, err
+		case 255:
+			gl = new(records.Global)
+			err = x.decoder.Decode(gl)
+			return gl, err
+		}
+	return nil, err
+}

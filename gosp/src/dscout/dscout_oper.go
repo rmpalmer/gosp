@@ -53,16 +53,17 @@ func (d *Dscout) Execute() {
 	fmt.Printf("dscout execute\n")
 	if (d.Source != nil) {
 		for rec := range *d.Source {
-			switch recType := rec.(type) {
-				case *records.Global:
-					fmt.Printf("dscout received global\n") 
-				case *records.Trace:
-					t := rec.(*records.Trace)
-					fmt.Printf("dscout received trace %d\n",t.Header[0])
-					d.HandleTrace(t)
-				default:
-					fmt.Printf("dscout received unrecognized type %v\n",recType) 
-			}
+			d.HandleRecord(rec)
+			//switch recType := rec.(type) {
+			//	case *records.Global:
+			//		fmt.Printf("dscout received global\n") 
+			//	case *records.Trace:
+			//		t := rec.(*records.Trace)
+			//		fmt.Printf("dscout received trace %d\n",t.Header[0])
+			//		d.HandleTrace(t)
+			//	default:
+			//		fmt.Printf("dscout received unrecognized type %v\n",recType) 
+			//}
 			if (d.Sink != nil) {
 				d.Sink <- rec
 			}
@@ -75,7 +76,10 @@ func (d *Dscout) Execute() {
 	d.Operation.Waiter.Done()
 }
 
-func (d *Dscout) HandleTrace(trace *records.Trace) {
-	d.marshaler.MarshalTrace(trace)
-}
+//func (d *Dscout) HandleTrace(trace *records.Trace) {
+//	d.marshaler.MarshalTrace(trace)
+//}
 
+func (d *Dscout) HandleRecord(rec records.Record) {
+	d.marshaler.MarshalRecord(rec)
+}

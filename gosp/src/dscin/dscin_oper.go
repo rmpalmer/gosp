@@ -51,15 +51,14 @@ func NewDscin (waiter *sync.WaitGroup, filename string) *Dscin {
 
 func (d *Dscin) Execute() {
 	fmt.Printf("dscin execute\n")
-	var t *records.Trace
+	var r records.Record
 	for {
-		t = d.HandleTrace()
-		if (t == nil) {
+		r = d.HandleRecord()
+		if (r == nil) {
 			break
 		} else if (d.Sink != nil) {
-			d.Sink <- t
+			d.Sink <- r
 		}
-		fmt.Printf("dscin read trace %d\n", t.Header[0])
 	}
 	if (d.Sink != nil) {
 		close(d.Sink)
@@ -67,10 +66,10 @@ func (d *Dscin) Execute() {
 	d.Operation.Waiter.Done()
 }
 
-func (d *Dscin) HandleTrace() *records.Trace {
-	t, err := d.marshaler.UnmarshalTrace()
+func (d *Dscin) HandleRecord() records.Record {
+	r, err := d.marshaler.UnmarshalRecord()
 	if (err != nil) {
 		return nil
 	}
-	return t
-}
+	return r
+} 
