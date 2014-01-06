@@ -4,14 +4,18 @@ import (
 
 )
 
+const (
+	GlobalType = 255
+)
+
 type Global struct {
-	tmin int
-	tmax int
-	dt   int
+	Tmin int
+	Tmax int
+	Dt   int
 }
 
 func (g *Global) Rectyp() int {
-	return 255
+	return GlobalType
 }
 
 func NewGlobal(tmin, tmax, dt int) *Global {
