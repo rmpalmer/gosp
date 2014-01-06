@@ -14,7 +14,7 @@ func main() {
 	waiter := &sync.WaitGroup{}
 	d := datgen.NewDatgen(waiter,5)
 	f := filter.NewFilter(waiter)
-	o := dscout.NewDscout(waiter,"foobar.gob")
+	o := dscout.NewDscout(waiter,"foobar.xml")
 	d.Append(&f.Operation)
 	f.Append(&o.Operation)
 	go d.Execute()
